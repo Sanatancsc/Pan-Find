@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Status Verification Portal</title>
-    <!-- Tailwind CSS v4 -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         .loader {
@@ -21,13 +20,11 @@
 <body class="bg-slate-50 font-sans min-h-screen flex items-center justify-center p-4">
 
     <div class="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-center text-white">
             <h2 class="text-xl font-bold tracking-wide">PAN Link Status Portal</h2>
             <p class="text-blue-100 text-xs mt-1">Apna 12-digit number daal kar live status check karein</p>
         </div>
 
-        <!-- Form Section -->
         <div class="p-6 space-y-6">
             <form id="statusForm" class="space-y-4">
                 <div>
@@ -54,13 +51,11 @@
                 </button>
             </form>
 
-            <!-- Loading Spinner -->
             <div id="loaderContainer" class="hidden flex flex-col items-center justify-center py-4 space-y-2">
                 <div class="loader"></div>
                 <p class="text-slate-500 text-xs font-medium animate-pulse">Fetching records from secure API...</p>
             </div>
 
-            <!-- Error Result Box -->
             <div id="errorBox" class="hidden rounded-xl border p-4 bg-rose-50 border-rose-200 text-rose-900">
                 <div class="flex items-center gap-2 mb-1">
                     <span>❌</span>
@@ -69,7 +64,6 @@
                 <p id="errorMessage" class="text-sm font-medium pl-7"></p>
             </div>
 
-            <!-- Success Records Container -->
             <div id="recordsContainer" class="hidden space-y-4">
                 <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Found Records:</h3>
                 <div id="recordsList" class="space-y-3"></div>
@@ -112,26 +106,33 @@
                 if (data.status === "success") {
                     recordsContainer.classList.remove('hidden');
                     
-                    // Loop through each record inside array
                     data.records.forEach(record => {
                         let statusBadge = "";
-                        if(record.status === "Accepted") {
+                        const currentStatus = (record.status || "").toLowerCase().trim();
+
+                        if(currentStatus === "accepted" || currentStatus === "success") {
                             statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full">Accepted</span>`;
-                        } else if(record.status === "Rejected") {
+                        } else if(currentStatus === "rejected" || currentStatus === "failed") {
                             statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-rose-100 text-rose-800 rounded-full">Rejected</span>`;
+                        } else if(currentStatus === "pending") {
+                            statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">Pending</span>`;
                         } else {
-                            statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${record.status || 'Pending'}</span>`;
+                            statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-blue-100 text-blue-800 rounded-full">${record.status || 'N/A'}</span>`;
                         }
+
+                        // Input wale text se format karke number nikalna (e.g., 1234 5678 9012)
+                        const formattedUid = uid.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3');
 
                         const recordCard = document.createElement('div');
                         recordCard.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 shadow-sm relative";
                         recordCard.innerHTML = `
                             <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2">
-                                <span class="font-bold text-slate-800 text-base">${record.name || 'N/A'}</span>
+                                <span class="font-bold text-slate-800 text-base">${record.name || 'Record Details'}</span>
                                 ${statusBadge}
                             </div>
                             <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 font-medium">
-                                <p><span class="text-slate-400">PAN:</span> ${record.pan || 'XXXXXXXXXX'}</p>
+                                <p class="col-span-2 text-sm text-slate-700 font-bold mb-1"><span class="text-slate-400 font-medium text-xs">Number:</span> ${formattedUid}</p>
+                                <p><span class="text-slate-400">PAN:</span> ${record.pan || 'N/A'}</p>
                                 <p><span class="text-slate-400">DOB:</span> ${record.dob || 'N/A'}</p>
                             </div>
                         `;
