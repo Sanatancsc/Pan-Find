@@ -17,7 +17,7 @@ export default async function handler(req, res) {
             return res.status(500).json({ status: "error", message: "Backend configuration error (Missing API Key)." });
         }
 
-        const apiUrl = `https://findapi.in/api/findpanrequest?api_key=${apiKey}&uid=${uid}`;
+        const apiUrl = `https://findapi.in/api/findpanstatus?api_key=${apiKey}&uid=${uid}`;
 
         // External API Call
         const apiResponse = await fetch(apiUrl);
