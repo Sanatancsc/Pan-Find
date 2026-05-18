@@ -53,7 +53,7 @@
 
             <div id="loaderContainer" class="hidden flex flex-col items-center justify-center py-4 space-y-2">
                 <div class="loader"></div>
-                <p class="text-slate-500 text-xs font-medium animate-pulse">Fetching records from secure API...</p>
+                <p class="text-slate-500 text-xs font-medium animate-pulse">Fetching records Please Wait...</p>
             </div>
 
             <div id="errorBox" class="hidden rounded-xl border p-4 bg-rose-50 border-rose-200 text-rose-900">
@@ -131,9 +131,8 @@
                                 ${statusBadge}
                             </div>
                             <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 font-medium">
-                                <p class="col-span-2 text-sm text-slate-700 font-bold mb-1"><span class="text-slate-400 font-medium text-xs">Number:</span> ${formattedUid}</p>
+                                <p class="col-span-2 text-sm text-slate-700 font-bold mb-1"><span class="text-slate-400 font-medium text-xs">Aadhar Number:</span> ${formattedUid}</p>
                                 <p><span class="text-slate-400">PAN:</span> ${record.pan || 'N/A'}</p>
-                                <p><span class="text-slate-400">DOB:</span> ${record.dob || 'N/A'}</p>
                             </div>
                         `;
                         recordsList.appendChild(recordCard);
