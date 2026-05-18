@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Verification Portal</title>
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-center text-white">
+            <h2 class="text-xl font-bold tracking-wide">PAN Link Status Portal</h2>
+            <p class="text-blue-100 text-xs mt-1">Apna 12-digit number daal kar live status check karein</p>
+        </div>
+
+        <!-- Form Section -->
+        <div class="p-6 space-y-6">
+            <form id="statusForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                        Enter 12-Digit Number
+                    </label>
+                    <input 
+                        type="text" 
+                        id="uidInput" 
+                        maxlength="12" 
+                        pattern="\d{12}" 
+                        inputmode="numeric"
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center tracking-widest text-xl font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 placeholder:text-slate-300" 
+                        placeholder="0000 0000 0000" 
+                        required
+                    >
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3 rounded-xl transition-all duration-150 shadow-lg shadow-blue-100 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                    <span>Check Status</span>
+                </button>
+            </form>
+
+            <!-- Loading Spinner -->
+            <div id="loaderContainer" class="hidden flex flex-col items-center justify-center py-4 space-y-2">
+                <div class="loader"></div>
+                <p class="text-slate-500 text-xs font-medium animate-pulse">Fetching records from secure API...</p>
+            </div>
+
+            <!-- Error Result Box -->
+            <div id="errorBox" class="hidden rounded-xl border p-4 bg-rose-50 border-rose-200 text-rose-900">
+                <div class="flex items-center gap-2 mb-1">
+                    <span>❌</span>
+                    <h3 class="font-bold text-sm uppercase tracking-wide">Error / Failed</h3>
+                </div>
+                <p id="errorMessage" class="text-sm font-medium pl-7"></p>
+            </div>
+
+            <!-- Success Records Container -->
+            <div id="recordsContainer" class="hidden space-y-4">
+                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Found Records:</h3>
+                <div id="recordsList" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('statusForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const uid = document.getElementById('uidInput').value;
+            const loader = document.getElementById('loaderContainer');
+            const errorBox = document.getElementById('errorBox');
+            const errorMessage = document.getElementById('errorMessage');
+            const recordsContainer = document.getElementById('recordsContainer');
+            const recordsList = document.getElementById('recordsList');
+
+            if(uid.length !== 12 || isNaN(uid)) {
+                alert("Kripya sahi 12-digit number enter karein.");
+                return;
+            }
+
+            // UI Reset
+            loader.classList.remove('hidden');
+            errorBox.classList.add('hidden');
+            recordsContainer.classList.add('hidden');
+            recordsList.innerHTML = "";
+
+            try {
+                const response = await fetch('/api/check-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid: uid })
+                });
+
+                const data = await response.json();
+                loader.classList.add('hidden');
+
+                if (data.status === "success") {
+                    recordsContainer.classList.remove('hidden');
+                    
+                    // Loop through each record inside array
+                    data.records.forEach(record => {
+                        let statusBadge = "";
+                        if(record.status === "Accepted") {
+                            statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full">Accepted</span>`;
+                        } else if(record.status === "Rejected") {
+                            statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-rose-100 text-rose-800 rounded-full">Rejected</span>`;
+                        } else {
+                            statusBadge = `<span class="px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 rounded-full">${record.status || 'Pending'}</span>`;
+                        }
+
+                        const recordCard = document.createElement('div');
+                        recordCard.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 shadow-sm relative";
+                        recordCard.innerHTML = `
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-2">
+                                <span class="font-bold text-slate-800 text-base">${record.name || 'N/A'}</span>
+                                ${statusBadge}
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 font-medium">
+                                <p><span class="text-slate-400">PAN:</span> ${record.pan || 'XXXXXXXXXX'}</p>
+                                <p><span class="text-slate-400">DOB:</span> ${record.dob || 'N/A'}</p>
+                            </div>
+                        `;
+                        recordsList.appendChild(recordCard);
+                    });
+
+                } else {
+                    errorBox.classList.remove('hidden');
+                    errorMessage.innerText = data.message || "Aadhaar Number is Invalid";
+                }
+
+            } catch (error) {
+                loader.classList.add('hidden');
+                errorBox.classList.remove('hidden');
+                errorMessage.innerText = "Network dikkat ya server gateway response nahi mila.";
+            }
+        });
+    </script>
+</body>
+</html>
